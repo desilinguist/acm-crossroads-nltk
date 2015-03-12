@@ -1,0 +1,463 @@
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[pdftex]{graphicx}
+\usepackage{url}
+\usepackage{layout}
+\usepackage{palatino}
+\setlength{\textheight}{590pt}
+\setlength{\topmargin}{5pt}
+\setlength{\footskip}{100pt}
+\setlength{\headsep}{5pt}
+\setlength{\headheight}{1pt}
+\usepackage[T1]{fontenc}
+\renewcommand*\ttdefault{txtt}
+\title{Getting Started on Natural Language Processing with Python}
+\author{Nitin Madnani\\{\normalsize \tt nmadnani@ets.org}}
+
+\date{}
+
+\begin{document}
+\maketitle
+\lstset{language=Python,
+		tabsize=8,
+		frameround=tttt,
+		keywordstyle=\ttfamily\color{Orange}\bfseries,
+		stringstyle=\ttfamily\color{Green},
+		columns=fullflexible,
+		identifierstyle=\ttfamily,
+		commentstyle=\itshape
+}
+
+\noindent (\textbf{Note}: This is a completely revised version of the article that was originally published in ACM Crossroads, Volume $13$, Issue $4$. Revisions were needed because of major changes to the Natural Language Toolkit project. The code in this version of the article will \emph{always} conform to the very latest version of NLTK (v2.0.4 as of September 2013). Although the code is always tested, it is possible that a bug or two may have been introduced in the code during the course of this revision. If you find any, please report them to the author. If you are \emph{still} using version $0.7$ of the toolkit for some reason, please refer to \url{http://www.acm.org/crossroads/xrds13-4/natural_language.html}).
+
+\section{Motivation}\label{sec:motivation} % (fold)
+The intent of this article is to introduce the readers to the area of Natural Language Processing, commonly referred to as \emph{NLP}. However, rather than just describing the salient concepts of NLP, this article uses the Python programming language to illustrate them as well. For readers unfamiliar with Python, the article provides a number of references to learn how to program in Python.
+% section motivation (end)
+
+\section{Introduction}\label{sec:introduction} % (fold)
+\subsection{Natural Language Processing}\label{sub:natural_language_processing} % (fold)
+The term \emph{Natural Language Processing} encompasses a broad set of techniques for automated generation, manipulation and analysis of natural or human languages. Although most NLP techniques inherit largely from Linguistics and Artificial Intelligence, they are also influenced by relatively newer areas such as Machine Learning, Computational Statistics and Cognitive Science.
+
+Before we see some examples of NLP techniques, it will be useful to introduce some very basic terminology. Please note that as a side effect of keeping things simple, these definitions may not stand up to strict linguistic scrutiny.
+\begin{itemize}
+	\item \textbf{Token}: Before any real processing can be done on the input text, it needs to be segmented into linguistic units such as words, punctuation, numbers or alphanumerics. These units are known as \emph{tokens}.
+	\item \textbf{Sentence}: An ordered sequence of tokens.
+	\item \textbf{Tokenization}: The process of splitting a sentence into its constituent tokens. For segmented languages such as English, the existence of whitespace makes tokenization relatively easier and uninteresting. However, for languages such as Chinese and Arabic, the task is more difficult since there are no explicit boundaries. Furthermore, almost all characters in such non-segmented languages can exist as one-character words by themselves but can also join together to form multi-character words.
+	\item \textbf{Corpus}: A body of text, usually containing a large number of sentences.
+	\item \textbf{Part-of-speech (POS) Tag}: A word can be classified into one or more of a set of lexical or part-of-speech categories such as \emph{Nouns}, \emph{Verbs}, \emph{Adjectives} and \emph{Articles}, to name a few. A POS tag is a symbol representing such a lexical category -  \emph{NN}(Noun), \emph{VB}(Verb), \emph{JJ}(Adjective), \emph{AT}(Article). One of the oldest and most commonly used tag sets is the \emph{Brown Corpus} tag set. We will discuss the Brown Corpus in more detail below.
+	\item \textbf{Parse Tree}: A tree defined over a given sentence that represents the syntactic structure of the sentence as defined by a formal grammar.
+\end{itemize}
+Now that we have introduced the basic terminology, let's look at some common NLP tasks:
+\begin{itemize}
+	\item \textbf{POS Tagging}: Given a sentence and a set of POS tags, a common language processing task is to automatically assign POS tags to each word in the sentences. For example, given the sentence \emph{The ball is red}, the output of a POS tagger would be \emph{The/AT ball/NN is/VB red/JJ}. State-of-the-art POS taggers~\cite{maxentpos} can achieve accuracy as high as $96\%$. Tagging text with parts-of-speech turns out to be extremely useful for more complicated NLP tasks such as \emph{parsing} and \emph{machine translation}, which are discussed below.
+	\item \textbf{Computational Morphology}: Natural languages consist of a very large number of words that are built upon basic building blocks known as \emph{morphemes} (or \emph{stems}), the smallest linguistic units possessing meaning. Computational morphology is concerned with the discovery and analysis of the internal structure of words using computers.
+	\item \textbf{Parsing}: In the parsing task, a \emph{parser} constructs the parse tree given a sentence. Some parsers assume the existence of a set of grammar rules in order to parse but recent parsers are smart enough to deduce the parse trees directly from the given data using complex statistical models~\cite{bikelparser}. Most parsers also operate in a supervised setting and require the sentence to be POS-tagged before it can be parsed. Statistical parsing is an area of active research in NLP.
+	\item \textbf{Machine Translation (MT)}: In machine translation, the goal is to have the \emph{computer} translate the given text in one natural language to fluent text in another language without any human in the loop. This is one of the most difficult tasks in NLP and has been tackled in a lot of different ways over the years. Almost all MT approaches use POS tagging and parsing as preliminary steps.
+\end{itemize}
+% subsection natural_language_processing (end)
+
+\subsection{Python}\label{sub:python} % (fold)
+The Python programming language is a dynamically-typed, object-oriented interpreted language. Although, its primary strength lies in the ease with which it allows a programmer to rapidly prototype a project, its powerful and mature set of standard libraries make it a great fit for large-scale production-level software engineering projects as well. Python has a very shallow learning curve and an excellent online learning resource~\cite{pythontut}.
+% subsection python (end)
+
+\subsection{Natural Language Toolkit}\label{sub:natural_language_toolkit} % (fold)
+Although Python already has most of the functionality needed to perform simple NLP tasks, it's still not powerful enough for most standard NLP tasks. This is where the \textbf{Natural Language Toolkit (NLTK)} comes in~\cite{nltk}. NLTK is a collection of modules and corpora, released under an open-source license, that allows students to learn and conduct research in NLP.
+The most important advantage of using NLTK is that it is entirely self-contained. Not only does it provide convenient functions and wrappers that can be used as building blocks for common NLP tasks, it also provides raw and pre-processed versions of standard corpora used in NLP literature and courses.
+% subsection natural_language_toolkit (end)
+% section introduction (end)
+
+\section{Using NLTK}\label{sec:using_nltk} % (fold)
+The NLTK website contains excellent documentation and tutorials for learning to use the toolkit~\cite{nltktut}. It would be unfair to the authors, as well as to this publication, to just reproduce their words for the sake of this article. Instead, I will introduce NLTK by showing how to perform four NLP tasks, in increasing order of difficulty. Each task is either an \emph{unsolved} exercise from the NLTK tutorial or a variant thereof. Therefore, the solution and analysis of each task represents original content written solely for this article.
+
+\subsection{NLTK Corpora}\label{sub:nltk_corpora} % (fold)
+As mentioned earlier, NLTK ships with several useful text corpora that are used widely in the NLP research community. In this section, we look at three of these corpora that we will be using in our tasks below:
+\begin{itemize}
+	\item \textbf{Brown Corpus}: The  Brown Corpus of Standard American English is considered to be the first general English corpus that could be used in computational linguistic processing tasks~\cite{brown}. The corpus consists of one million words of American English texts printed in 1961. For the corpus to represent as general a sample of the English language as possible, 15 different genres were sampled such as Fiction, News and Religious text. Subsequently, a POS-tagged version of the corpus was also created with substantial manual effort.
+	\item \textbf{Gutenberg Corpus}: The Gutenberg Corpus is a selection of 14 texts chosen from \emph{Project Gutenberg} - the largest online collection of free e-books~\cite{gutenberg}. The corpus contains a total of 1.7 million words.
+	\item \textbf{Stopwords Corpus}: Besides regular content words, there is another class of words called \emph{stop words} that perform important grammatical functions but are unlikely to be interesting by themselves, such as prepositions, complementizers and determiners. NLTK comes bundled with the Stopwords Corpus - a list of 2400 stop words across 11 different languages (including English).
+\end{itemize}
+% subsection nltk_corpora (end)
+
+\subsection{NLTK naming conventions}\label{sub:nltk_naming_conventions} % (fold)
+Before, we begin using NLTK for our tasks, it is important to familiarize ourselves with the naming conventions used in the toolkit. The top-level package is called \texttt{nltk} and we can refer to the included modules by using their \emph{fully qualified} dotted names, e.g.~\texttt{nltk.corpus} and \texttt{nltk.utilities}. The contents of any such module can then be imported into the top-level namespace by using the standard \lstinline$from$ \dots \lstinline$import$ \dots \ construct in Python.
+% subsection nltk_naming_conventions (end)
+
+\begin{lstlisting}[float,caption=Exploring NLTK's bundled corpora.,label=task1,frame=trBL,escapechar=*]
+# import the gutenberg collection
+>>> from nltk.corpus import gutenberg
+# what corpora are in the collection ?
+>>>  print gutenberg.fileids()
+*\color{RoyalBlue}{\texttt{[}}**\color{RoyalBlue}{\texttt{'austen-emma.txt',}}* *\color{RoyalBlue}{\texttt{'austen-persuasion.txt',}}*
+*\color{RoyalBlue}{\texttt{'austen-sense.txt',}}* *\color{RoyalBlue}{\texttt{'bible-kjv.txt',}}* *\color{RoyalBlue}{\texttt{'blake-poems.txt',}}*
+*\color{RoyalBlue}{\texttt{'bryant-stories.txt',}}* *\color{RoyalBlue}{\texttt{'burgess-busterbrown.txt',}}*
+*\color{RoyalBlue}{\texttt{'carroll-alice.txt',}}* *\color{RoyalBlue}{\texttt{'chesterton-ball.txt',}}*
+*\color{RoyalBlue}{\texttt{'chesterton-brown.txt',}}* *\color{RoyalBlue}{\texttt{'chesterton-thursday.txt',}}*
+*\color{RoyalBlue}{\texttt{'edgeworth-parents.txt',}}* *\color{RoyalBlue}{\texttt{'melville-moby\_dick.txt',}}*
+*\color{RoyalBlue}{\texttt{'milton-paradise.txt',}}* *\color{RoyalBlue}{\texttt{'shakespeare-caesar.txt',}}*
+*\color{RoyalBlue}{\texttt{'shakespeare-hamlet.txt',}}* *\color{RoyalBlue}{\texttt{'shakespeare-macbeth.txt',}}*
+*\color{RoyalBlue}{\texttt{'whitman-leaves.txt'}}**\color{RoyalBlue}{\texttt{]}}*
+
+# import FreqDist class
+>>> from nltk import FreqDist
+# create frequency distribution object
+>>> fd = FreqDist()
+# for each token in the relevant text, increment its counter
+*$\mathbf{>>>}$* for word in gutenberg.words('austen-persuasion.txt'):
+*\dots\qquad* fd.inc(word)
+*\dots\qquad*
+>>> print fd.N() # total number of samples
+*\color{RoyalBlue}{$98171$}*
+>>> print fd.B() # number of bins or unique samples
+*\color{RoyalBlue}{$6132$}*
+# Get a list of the top 10 words sorted by frequency
+>>> for word in fd.keys()*\texttt{[}*:10*\texttt{]}*:
+*\dots\qquad* print word, fd*\texttt{[}*word*\texttt{]}*
+*\color{RoyalBlue}{\texttt{,} $6750$}*
+*\color{RoyalBlue}{\texttt{the} $3120$}*
+*\color{RoyalBlue}{\texttt{to $2775$}*
+*\color{RoyalBlue}{\texttt{. $2741$}*
+*\color{RoyalBlue}{\texttt{and $2739$}*
+*\color{RoyalBlue}{\texttt{of $2564$}*
+*\color{RoyalBlue}{\texttt{a $1529$}*
+*\color{RoyalBlue}{\texttt{in $1346$}*
+*\color{RoyalBlue}{\texttt{was $1330$}*
+*\color{RoyalBlue}{\texttt{; $1290$}*
+\end{lstlisting}
+
+\subsection{Task 1: Exploring Corpora}\label{sub:task_1} % (fold)
+NLTK is distributed with several NLP corpora, as mentioned before. We define this task in terms of exploring one of such corpora.\\
+
+\noindent \textbf{Task}: Use the NLTK \texttt{corpus} module to read the corpus \texttt{austen-persuasion.txt}, included in the Gutenberg corpus collection, and answer the following questions:
+\begin{itemize}
+	 \item How many total words does this corpus have ?
+	 \item How many unique words does this corpus have ?
+	 \item What are the counts for the $10$ most frequent words ?
+\end{itemize}
+
+\noindent Besides the \texttt{corpus} module that allows us to access and explore the bundled corpora with ease, NLTK also provides the \texttt{probability} module that contains several useful classes and functions for the task of computing probability distributions. One such  class is called \texttt{FreqDist} and it keeps track of the sample frequencies in a distribution. Listing~\ref{task1} shows how to use these two modules to perform the first task. \\
+
+\noindent \textbf{Solution}: Jane Austen's book \emph{Persuasion} contains $98171$ total tokens and $6141$ unique tokens. Out of these, the most common token is a comma, followed by the word \emph{the}. In fact, the last part of this task is the perfect segue for one of the most interesting empirical observations about word occurrences. If we were to take a large corpus, count up the number of times each word occurs in that corpus and then list the words according to the number of occurrences (starting with the most frequent), we would be able to observe a direct relationship between the frequency of a word and its position in the list. In fact, Zipf claimed this relationship could be expressed mathematically, i.e. for any given word, $fr = k$, where $f$ is the frequency of that word, $r$ is the \emph{rank}, or the position of the word in the sorted list, and $k$ is a constant. So, for example, the $5^{th}$ most frequent word should occur exactly two times as frequently as the $10^{th}$ most frequent word. In NLP literature, the above relationship is usually referred to as \textbf{Zipf's Law}.
+
+Even though the mathematical relationship prescribed by Zipf's Law may not hold exactly, it is useful to describe how words are distributed in human languages - there are a few words that are very common, a few that occur with medium frequency and a very large number of words that occur very rarely. It's simple to extend the last part of Task 1 and graphically visualize this relationship using NLTK as shown in Listing 1a. The corresponding log-log plot, shown in Figure~\ref{zipfplot}, clearly illustrates that the relationship does hold, to a large extent, for our corpus.
+
+\begin{lstlisting}[float,title=Listing 1a: Using NLTK to plot Zipf's Law.,frame=trBL,escapechar=*]
+>>> from nltk.corpus import gutenberg
+>>> from nltk import FreqDist
+# For plotting, we need matplotlib (get it from the NLTK download page)
+>>> import matplotlib
+>>> import matplotlib.pyplot as plt
+
+# Count each token in each text of the Gutenberg collection
+>>> fd = FreqDist()
+>>> for text in gutenberg.fileids():
+*\dots\qquad* for word in gutenberg.words(text):
+*\dots\qquad\qquad* fd.inc(word)
+
+# Initialize two empty lists which will hold our ranks and frequencies
+>>> ranks = *\texttt{[]}*
+>>> freqs = *\texttt{[]}*
+
+# Generate a (rank, frequency) point for each counted token and
+# and append to the respective lists, Note that the iteration
+# over fd is automatically sorted.
+>>> for rank, word in enumerate(fd):
+*\dots\qquad* ranks.append(rank+1)
+*\dots\qquad* freqs.append(fd*\texttt{[}*word*\texttt{]}*)
+*\dots\qquad*
+
+# Plot rank vs frequency on a log-log plot and show the plot
+>>> plt.loglog(ranks, freqs)
+>>> plt.xlabel('frequency(f)', fontsize=14, fontweight='bold')
+>>> plt.ylabel('rank(r)', fontsize=14, fontweight='bold')
+>>> plt.grid(*\color{magenta}{\textbf{True}}*)
+>>> plt.show()
+\end{lstlisting}
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[scale=0.57]{zipfplot}
+\end{center}
+\caption{Does Zipf's Law hold for the Gutenberg Corpus ?}\label{zipfplot}
+\end{figure}
+
+% subsection task_1 (end)
+
+\subsection{Task 2: Predicting Words} % (fold)
+\label{sub:task_2_predicting_words}
+Now that we have learnt how to explore a corpus, let's define a task that can put such explorations to use. \\
+
+\noindent \textbf{Task}: Train and build a word predictor, i.e., given a training corpus, write a program that can predict the word that follows a given word. Use this predictor to generate a random sentence of 20 words.
+
+\noindent To build a word predictor, we first need to compute a distribution of two-word sequences over a \emph{training} corpus, i.e., we need to keep count the occurrences of a word given the previous word as a context for that word. Once we have computed such a distribution, we can use the input word to find a list of all possible words that followed it in the training corpus and then output a word at random from this list. To generate a random sentence of 20 words, all we have to do is to start at the given word, predict the next word using this predictor, then the next and so on until we get a total of 20 words. Listing~\ref{predictwords} illustrates how to accomplish this easily using the modules provided by NLTK. We use Jane Austen's \emph{Persuasion} as the training corpus. \\
+
+\begin{lstlisting}[float,caption=Predicting words using NLTK.,label=predictwords,frame=trBL,escapechar=*]
+>>> from nltk.corpus import gutenberg
+>>> from nltk import ConditionalFreqDist
+>>> from random import choice
+
+# Create distribution object
+>>> cfd = ConditionalFreqDist()
+
+# For each token, count current word given previous word
+>>> prev_word = None
+>>> for word in gutenberg.words('austen-persuasion.txt'):
+*\dots\qquad* cfd*\texttt{[}*prev_word*\texttt{]}*.inc(word)
+*\dots\qquad* prev_word = word
+
+# Start predicting at the given word, say 'therefore'
+>>> word = 'therefore'
+>>> i = 1
+
+# Find all words that can possibly follow the current word
+# and choose one at random
+>>> while i < 20:
+*\dots\qquad* print word,
+*\dots\qquad* lwords = cfd*\texttt{[}*word*\texttt{]}*.samples()
+*\dots\qquad* follower = choice(lwords)
+*\dots\qquad* word = follower
+*\dots\qquad* i += 1
+*\dots\qquad*
+*\color{RoyalBlue}{\texttt{therefore}}* *\color{RoyalBlue}{\texttt{it}}* *\color{RoyalBlue}{\texttt{known}}* *\color{RoyalBlue}{\texttt{of}}* *\color{RoyalBlue}{\texttt{women}}* *\color{RoyalBlue}{\texttt{ought}}* *\color{RoyalBlue}{\texttt{.}}* *\color{RoyalBlue}{\texttt{Leave}}* *\color{RoyalBlue}{\texttt{me}}* *\color{RoyalBlue}{\texttt{so}}* *\color{RoyalBlue}{\texttt{well}}*
+*\color{RoyalBlue}{\texttt{placed}}* *\color{RoyalBlue}{\texttt{in}}* *\color{RoyalBlue}{\texttt{five}}* *\color{RoyalBlue}{\texttt{altogether}}* *\color{RoyalBlue}{\texttt{well}}* *\color{RoyalBlue}{\texttt{placed}}* *\color{RoyalBlue}{\texttt{themselves}}* *\color{RoyalBlue}{\texttt{delighted}}*
+\end{lstlisting}
+
+\noindent \textbf{Solution}: The $20$ word output sentence is, of course, not grammatical but every two word sequence will be because the training corpus that we used for estimating our conditional frequency distribution is grammatical and because of the way that we estimated the conditional frequency distribution. Note that for our task we used only the previous word as the context for our predictions. It is certainly possible to use the previous two or, even, three words as the prediction context.
+% subsection task_2_predicting_words (end)
+
+\subsection{Task 3: Discovering Part-Of-Speech Tags} % (fold)
+\label{sub:task_3_discovering_part_of_speech_tags}
+
+NLTK comes with an excellent set of modules to allow us to train and build relatively sophisticated POS taggers. However, for this task, we will restrict ourselves to a simple analysis on an already tagged corpus included with NLTK. \\
+
+\noindent \textbf{Task}: Tokenize the included \emph{Brown Corpus} and build one or more suitable data structures so that you can answer the following questions:
+\begin{itemize}
+    \item What is the most frequent tag ?
+    \item Which word has the most number of distinct tags ?
+    \item What is the ratio of masculine to feminine pronouns ?
+    \item How many words are ambiguous, in the sense that they appear with at least two tags ?
+\end{itemize}
+
+For this task, it is important to note that there is are two versions of the Brown corpus that comes bundled with NLTK: the first is the raw corpus that we used in the last two tasks, and the second is a tagged version wherein each token of each sentence of the corpus has been annotated with the correct POS tags. Each sentence in this version of a corpus is represented as a list of 2-tuples, each of the form (token, tag). For example, a sentence like ``\emph{the ball is green}'', from a tagged corpus, will be represented inside NLTK as the list \texttt{[('the','at'), ('ball','nn'), ('is','vbz'), ('green','jj')]} .
+
+As explained before, the Brown corpus comprises of 15 different sections, represented by the letters \emph{'a'} through \emph{'r'}. Each of the sections represents a different genre of text and for certain NLP tasks not discussed in this article, this division proves very useful. Given this information, all we should have to do is build the data structures to analyze this tagged corpus. Looking at the kinds of questions that we need to answer, it will be sufficient to build a frequency distribution over the POS tags and a conditional frequency distribution over the tags using the tokens as the context. Note that NLTK also allows us to \emph{directly} import the FreqDist and ConditionalFreqDist classes from the top-level namespace. Listing~\ref{poscode} shows how to do this using NLTK.\\
+
+\begin{lstlisting}[float,caption=Analyzing tagged corpora using NLTK.,label=poscode,frame=trBL,framexrightmargin=25pt,escapechar=*]
+>>> from nltk.corpus import brown
+>>> from nltk import FreqDist, ConditionalFreqDist
+>>> fd = FreqDist()
+>>> cfd = ConditionalFreqDist()
+
+# for each tagged sentence in the corpus, get the (token, tag) pair and update
+# both count(tag) and count(tag given token)
+>>> for sentence in brown.tagged_sents():
+*\dots\qquad* for (token, tag) in sentence:
+*\dots\qquad\qquad* fd.inc(tag)
+*\dots\qquad\qquad* cfd*\texttt{[}*token*\texttt{]}*.inc(tag)
+
+>>> fd.max() # The most frequent tag is ...
+*\color{RoyalBlue}{\texttt{'NN'}}*
+>>> wordbins = *\texttt{[]}* # Initialize a list to hold (numtags,word) tuple
+# append each (n(unique tags for token),token) tuple to list
+>>> for token in cfd.conditions():
+*\dots\qquad* wordbins.append((cfd*\texttt{[}*token*\texttt{]}*.B(), token))
+*\dots\qquad*
+# sort tuples by number of unique tags (highest first)
+>>> wordbins.sort(reverse=*\color{magenta}{\textbf{True}}*)
+>>> print wordbins*\texttt{[}*0*\texttt{]}* # token with max. no. of tags is ...
+*\color{RoyalBlue}{\texttt{(12, 'that')}}*
+
+>>> male = *\texttt{[}*'he','his','him','himself'*\texttt{]}* # masculine pronouns
+>>> female = *\texttt{[}*'she','hers','her','herself'*\texttt{]}* # feminine pronouns
+>>> n_male, n_female = *$0$*, *$0$* # initialize counters
+# total number of masculine samples
+>>> for m in male:
+*\dots\qquad* n_male += cfd*\texttt{[}*m*\texttt{]}*.N()
+*\dots\qquad*
+# total number of feminine samples
+>>> for f in female:
+*\dots\qquad* n_female += cfd*\texttt{[}*f*\texttt{]}*.N()
+*\dots\qquad*
+>>> print float(n_male)/n_female # calculate required ratio
+*\color{RoyalBlue}{$3.257$}*
+>>> n_ambiguous = *$0$*
+>>> for (ntags, token) in wordbins:
+*\dots\qquad* if ntags > 1:
+*\dots\qquad\qquad* n_ambiguous += *$1$*
+*\dots\qquad*
+>>> n_ambiguous # number of tokens with more than a single POS tag
+*\color{RoyalBlue}{$8729$}*
+\end{lstlisting}
+
+\noindent \textbf{Solution}: The most frequent POS tag in the Brown corpus is, unsurprisingly, the noun (NN). The word that has the most number of unique tags is, in fact, the word \emph{that}. There are almost 3 times as many masculine pronouns in the corpus as feminine pronouns and, finally, there are as many as $8700$ words in the corpus that can be deemed ambiguous - a number that should indicate the difficulty of the POS-tagging task.
+% subsection task_3_discovering_part_of_speech_tags (end)
+
+\subsection{Task 4: Word Association} % (fold)
+\label{sub:task_4_word_association}
+
+The task of free word association is a very common one when it comes to psycholinguistics, especially in the context of \emph{lexical retrieval} - human subjects respond more readily to a word if it follows another highly associated word as opposed to a completely unrelated word. The instructions for performing the association are fairly straightforward - the subject is asked for the word that immediately comes to mind upon hearing a particular word.\\
+
+\noindent \textbf{Task}: Use a large POS-tagged text corpus to perform free word association. You may ignore function words and assume that the words to be associated are always nouns. \\
+
+\noindent For this task, we will use the concept of \emph{word co-occurrences}, i.e., counting the number of times words occur in close proximity with each other and then using these counts to estimate the degree of association. For each token in each sentence, we will look at all following tokens that lie within a fixed window and count their occurrences in this context using a conditional frequency distribution. Listing~\ref{wordassoc} shows how we accomplish this using Python and NLTK with a window size of 5 and the POS-tagged version of the Brown corpus. \\
+
+\begin{lstlisting}[float,caption=Performing free word association using NLTK.,label=wordassoc,frame=trBL,framexrightmargin=25pt,escapechar=*]
+>>> from nltk.corpus import brown, stopwords
+>>> from nltk import ConditionalFreqDist
+>>> cfd = ConditionalFreqDist()
+# get a list of all English stop words
+>>> stopwords_list = stopwords.words('english')
+
+# define a function that returns true if the input tag is some form of noun
+>>> def is_noun(tag):
+*\dots\qquad* return tag.lower() in *\texttt{[}*'nn','nns','nn$','nn-tl','nn+bez',\
+*\qquad\qquad\qquad\qquad\qquad\ \ * 'nn+hvz', 'nns$','np','np$','np+bez','nps',\
+*\qquad\qquad\qquad\qquad\qquad\ \ * 'nps$','nr','np-tl','nrs','nr$'*\texttt{]}*
+*\dots\qquad*
+# count nouns that occur within a window of size 5 ahead of other nouns
+>>> for sentence in brown.tagged_sents():
+*\dots\qquad* for (index, tagtuple) in enumerate(sentence):
+*\dots\qquad\qquad* (token, tag) = tagtuple
+*\dots\qquad\qquad* token = token.lower()
+*\dots\qquad\qquad* if token not in stopwords_list and is_noun(tag):
+*\dots\qquad\qquad\qquad* window = sentence*\texttt{[}*index+*$1$*:index+*$5$\texttt{]}*
+*\dots\qquad\qquad\qquad* for (window_token, window_tag) in window:
+*\dots\qquad\qquad\qquad\qquad* window_token = window_token.lower()
+*\dots\qquad\qquad\qquad\qquad* if window_token not in stopwords_list and \
+*\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad*is_noun(window_tag):
+*\dots\qquad\qquad\qquad\qquad\qquad* cfd*\texttt{[}*token*\texttt{]}*.inc(window_token)
+
+# OK. We are done ! Let's start associating !
+>>> print cfd*\texttt{[}*'left'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{right}}*
+>>> print cfd*\texttt{[}*'life'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{death}}*
+>>> print cfd*\texttt{[}*'man'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{woman}}*
+>>> print cfd*\texttt{[}*'woman'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{world}}*
+>>> print cfd*\texttt{[}*'boy'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{girl}}*
+>>> print cfd*\texttt{[}*'girl'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{trouble}}*
+>>> print cfd*\texttt{[}*'male'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{female}}*
+>>> print cfd*\texttt{[}*'ball'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{player}}*
+>>> print cfd*\texttt{[}*'doctor'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{bills}}*
+>>> print cfd*\texttt{[}*'road'*\texttt{]}*.max()
+*\color{RoyalBlue}{\texttt{block}}*
+
+\end{lstlisting}
+
+\noindent \textbf{Solution}: The ``word associator'' that we have built seems to work surprisingly well, especially when compared to the minimal amount of effort that was required. (In fact, in the context of folk psychology, our associator would almost seem to have a personality, albeit a pessimistic and misogynistic one). The results of this task should be a clear indication of the usefulness of corpus linguistics in general. As a further exercise, the association task can be easily extended in sophistication by utilizing parsed corpora and using information-theoretic measures of association~\cite{wordnorms}.
+
+% subsection task_4_word_association (end)
+% section using_nltk (end)
+
+\section{Discussion} % (fold)
+\label{sec:discussion}
+Although this article used Python and NLTK to provide an introduction to basic natural language processing, it is important to note that there are other NLP frameworks, besides NLTK, that are used by the NLP academic and industrial community. A popular example is \textbf{GATE} (General Architecture for Text Engineering), developed by the NLP research group at the University of Sheffield~\cite{gate}. GATE is built on the Java and provides, besides the framework, a general architecture which describes how language processing components connect to each other and a graphical environment. GATE is freely available and is primarily used for text mining and information extraction.
+
+Every programming language and framework has its own strengths and weaknesses. For this article, we chose to use Python because it possesses a number of advantages over the other programming languages such as: \textbf{(a)} High readability \textbf{(b)} Easy to use object-oriented paradigm \textbf{(c)} Easily extensible \textbf{(d)} Strong unicode support and, \textbf{(e)} A powerful standard library. It is also extremely robust and efficient and has been used in complex and large-scale NLP projects such as a state-of-the-art machine translation decoder~\cite{hiero}.
+% section discussion (end)
+
+\section{Conclusions} % (fold)
+\label{sec:conclusions}
+Natural Language Processing is a very active field of research and attracts many graduate students every year. It allows a coherent study of the human language from the vantage points of several disciplines - Linguistics, Psychology, Computer Science and Mathematics. Another, perhaps more important, reason for choosing NLP as an area of graduate study is the sheer number of very interesting problems with well-established constraints but no general solutions. For example, the original problem of machine translation which spurred the growth of the field remains, even after two decades of intriguing and active research, one of the hardest problems to solve. There are several other cutting-edge areas in NLP that currently draw a large amount of research activity. It would be informative to discuss a few of them here:
+\begin{itemize}
+    \item \textbf{Syntax-based Machine Translation}: For the past decade or so, most of the research in machine translation has focussed on using statistical methods on very large corpora to learn translations of words and phrases. However, more and more researchers are starting to incorporate syntax into such methods~\cite{ssmt}.
+    \item \textbf{Automatic Multi-document Text Summarization}: There are a large number of efforts underway to use computers to automatically generate coherent and informative summaries for a cluster of related documents~\cite{multidocsummary}. This task is considerably more difficult compared to generating a summary for a single document because there may be redundant information present across multiple documents.
+    \item \textbf{Computational Parsing}: Although the problem of using probabilistic models to automatically generating syntactic structures for a given input text has been around for a long time, there are still significant improvements to be made. The most challenging task is to be able to parse, with reasonable accuracy, languages that exhibit very different linguistic properties when compared to English, such as Chinese~\cite{parsing} and Arabic.
+\end{itemize}
+
+\noindent Python and the Natural Language Toolkit (NLTK) allow any programmer to get acquainted with NLP tasks easily without having to spend too much time on gathering resources. This article is intended to make this task even easier by providing working examples and references for anyone interested in learning about NLP.
+% section conclusions (end)
+
+\section{Biography} % (fold)
+\label{sec:biography}
+Nitin Madnani is a research scientist at Educational Testing Service. He was previously a Ph.D. student in the Department of Computer Science at University of Maryland, College Park and a graduate research assistant with the Institute for Advanced Computer Studies. He works in the area of statistical natural language processing, specifically paraphrasing, machine translation and text summarization. His language of choice for all tasks, big or small, is Python.
+
+% section biography (end)
+
+
+
+\begin{thebibliography}{99}
+\bibitem[1]{bikelparser}
+Dan Bikel.
+\newblock 2004.
+\newblock \emph{On the Parameter Space of Generative Lexicalized Statistical Parsing Models.}
+\newblock Ph.D. Thesis.\\
+\newblock{\url{http://www.cis.upenn.edu/~dbikel/papers/thesis.pdf}}
+
+\bibitem[2]{hiero}
+David Chiang.
+\newblock 2005.
+\newblock \emph{A hierarchical phrase-based model for statistical machine translation.}
+\newblock Proceedings of ACL.
+
+\bibitem[3]{wordnorms}
+Kenneth W. Church and Patrick Hanks.
+\newblock 1990.
+\newblock \emph{Word association norms, mutual information, and lexicography.}
+\newblock Computational Linguistics. 16(1).
+
+\bibitem[4]{gate}
+H.~Cunningham, D.~Maynard, K.~Bontcheva. and V.~Tablan.
+\newblock 2002.
+\newblock \emph{GATE: A Framework and Graphical Development Environment for Robust NLP Tools and Applications.}
+\newblock Proceedings of the 40th Anniversary Meeting of the Association for Computational Linguistics.
+
+\bibitem[5]{gutenberg}
+Michael Hart and Gregory Newby.
+\newblock \emph{Project Gutenberg.}
+\newblock Proceedings of the 40th Anniversary Meeting of the Association for Computational Linguistics.\\
+\url{http://www.gutenberg.org/wiki/Main_Page}
+
+\bibitem[6]{brown}
+H.~Kucera and W.~N.~Francis.
+\newblock 1967.
+\newblock \emph{ Computational Analysis of Present-Day American English.}
+\newblock Brown University Press, Providence, RI.
+
+\bibitem[7]{parsing}
+Roger Levy and Christoper D.~Manning.
+\newblock 2003.
+\newblock \emph{Is it harder to parse Chinese, or the Chinese Treebank ?}
+\newblock Proceedings of ACL.
+
+\bibitem[8]{multidocsummary}
+Dragomir R.~ Radev and Kathy McKeown.
+\newblock 1999.
+\newblock \emph{Generating natural language summaries from multiple on-line sources.}
+\newblock Computational Linguistics. 24:469-500.
+
+\bibitem[9]{maxentpos}
+Adwait Ratnaparkhi
+\newblock 1996.
+\newblock \emph{A Maximum Entropy Part-Of-Speech Tagger.}
+\newblock Proceedings of Empirical Methods on Natural Language Processing.
+
+\bibitem[10]{ssmt}
+Dekai Wu and David Chiang.
+\newblock 2007.
+\newblock \emph{Syntax and Structure in Statistical Translation.}
+\newblock Workshop at HLT-NAACL.
+
+\bibitem[11]{pythontut}
+\newblock \emph{The Official Python Tutorial.} \\
+\newblock \url{http://docs.python.org/tut/tut.html}
+
+\bibitem[12]{nltk}
+\newblock \emph{Natural Language Toolkit.}
+\newblock \url{http://nltk.sourceforge.net}
+
+\bibitem[13]{nltktut}
+\newblock \emph{NLTK Tutorial.}
+\newblock \url{http://nltk.sourceforge.net/index.php/Book}
+
+\end{thebibliography}
+
+\end{document}
