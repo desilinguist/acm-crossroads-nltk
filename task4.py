@@ -21,7 +21,7 @@ for sentence in brown.tagged_sents():
             for (window_token, window_tag) in window:
                 window_token = window_token.lower()
                 if window_token not in stopwords_list and is_noun(window_tag):
-                    cfd[token].inc(window_token)
+                    cfd[token][window_token] += 1
 
 
 # OK. We are done ! Let's start associating !
