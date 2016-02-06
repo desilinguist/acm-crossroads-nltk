@@ -9,8 +9,8 @@ cfd = ConditionalFreqDist()
 # both count(tag) and count(tag given token)
 for sentence in brown.tagged_sents():
     for (token, tag) in sentence:
-        fd.inc(tag)
-        cfd[token].inc(tag)
+        fd[tag] += 1
+        cfd[token][tag] += 1
 
 # The most frequent tag is ...
 print(fd.max())
